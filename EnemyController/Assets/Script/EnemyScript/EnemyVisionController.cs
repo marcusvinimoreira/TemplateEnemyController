@@ -9,12 +9,14 @@ public class EnemyVisionController : MonoBehaviour
     [SerializeField]
     private GameObject player;
     [SerializeField]
-    private Vector2 posStart;
+    private Vector3 posStart;
 
     [SerializeField]
     private Rigidbody2D rb;
     [SerializeField]
     private Vector3 target;
+    [SerializeField]
+    private float fov;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -28,7 +30,11 @@ public class EnemyVisionController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RayPlayer();
+        if ((Vector2.Angle(player.transform.position - transform.position, -transform.up)) <= fov *0.5f)
+        {
+            RayPlayer();
+
+        }
     }
 
     //Metódo para calcular a distância do player e Enemy
@@ -42,16 +48,42 @@ public class EnemyVisionController : MonoBehaviour
         Debug.DrawRay(transform.position, temp, Color.red);
         //Verifica se o hit está colidindo com o player
         //Se sim o Target(alvo) pega a posição do player
-        if(hit.collider != null)
+        if (hit.collider != null)
         {
-            if(hit.collider.tag == "Player")
+            if (hit.collider.tag == "Player")
             {
                 target = player.transform.position;
             }
+            else //quando perder a visão da tag ele volta para pos inicial
+            {
+                target = posStart;
+
+            }
+        }
+        else//volta para área de incial quando player sai da área de visão
+        {
+            target = posStart;
         }
 
-        float distanciaTempo = Vector3.Distance(target, transform.position);
+        float distanciaTime = Vector3.Distance(target, transform.position);
         Vector3 dir = (target - transform.position).normalized;
+
+        //Verficar se é o player
+        //se ele está área de ataque
+        if (target != posStart && distanciaTime < rayAttack)
+        {
+            //animação
+        }
+        else
+        {
+            rb.MovePosition(transform.position + dir * speed * Time.deltaTime);
+        }
+
+        if (target == posStart && distanciaTime < 0.02f)
+        {
+            transform.position = posStart;
+        }
+        Debug.DrawLine(transform.position, target, Color.green);
     }
     private void OnDrawGizmosSelected()
     {
